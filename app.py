@@ -4,6 +4,12 @@ import os
 from google.cloud import aiplatform
 from google.cloud.aiplatform.gapic.schema import predict
 import json
+import os
+from google.oauth2 import service_account
+
+KEY_PATH = os.getenv("GCP_KEY_PATH", "/home/user/.keys/inteligencia-artificial-collos.json")
+credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
+
 
 def predict_image_classification_sample(
     project: str = "366594249966",
@@ -12,13 +18,7 @@ def predict_image_classification_sample(
     location: str = "us-central1",
     api_endpoint: str = "us-central1-aiplatform.googleapis.com",
 ):
-    # Configura as credenciais da conta de serviço
-    credentials_path = "key/inteligencia-artificial-collos-84bb5f7181bb.json"
-    if not os.path.exists(credentials_path):
-        raise FileNotFoundError(f"Arquivo de credenciais não encontrado: {credentials_path}")
-    
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
-    
+
     # The AI Platform services require regional API endpoints.
     client_options = {"api_endpoint": api_endpoint}
     # Initialize client that will be used to create and send requests.
