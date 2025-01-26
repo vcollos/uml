@@ -11,8 +11,9 @@ credentials, project = default()
 aiplatform.init(credentials=credentials, project=project)
 
 def predict_image_classification_sample(
-    endpoint_id: str = "2478766501448908800",
     filename: str,
+    project: str = "366594249966",
+    endpoint_id: str = "2478766501448908800",
     location: str = "us-central1",
     api_endpoint: str = "us-central1-aiplatform.googleapis.com",
 ):
