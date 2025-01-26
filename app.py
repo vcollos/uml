@@ -1,19 +1,18 @@
 import gradio as gr
 import base64
-import os
 from google.auth import default
 from google.cloud import aiplatform
 from google.cloud.aiplatform.gapic.schema import predict
 
-# Obtém credenciais e projeto do ambiente configurado no Google Cloud CLI
+# Usa as credenciais padrão configuradas com `gcloud auth`
 credentials, project = default()
 
-# Inicializar o cliente AI Platform
+# Inicializa o cliente AI Platform com as credenciais padrão
 aiplatform.init(credentials=credentials, project=project)
 
 def predict_image_classification_sample(
     endpoint_id: str = "2478766501448908800",
-    filename: str = "YOUR_IMAGE_FILE",
+    filename: str,
     location: str = "us-central1",
     api_endpoint: str = "us-central1-aiplatform.googleapis.com",
 ):
@@ -21,7 +20,7 @@ def predict_image_classification_sample(
     client_options = {"api_endpoint": api_endpoint}
     client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
 
-    # Ler e codificar a imagem
+    # Lê e codifica a imagem
     with open(filename, "rb") as f:
         file_content = f.read()
 
@@ -31,66 +30,55 @@ def predict_image_classification_sample(
     ).to_value()
     instances = [instance]
 
-    # Configurar os parâmetros da predição
+    # Configurar parâmetros da predição
     parameters = predict.params.ImageClassificationPredictionParams(
-        confidence_threshold=0.5,
-        max_predictions=5,
+        confidence_threshold=0.5, max_predictions=5
     ).to_value()
 
-    # Obter o endpoint completo
+    # Montar o endpoint
     endpoint = client.endpoint_path(project=project, location=location, endpoint=endpoint_id)
 
     # Realizar a predição
     response = client.predict(endpoint=endpoint, instances=instances, parameters=parameters)
-    print("response")
-    print(" deployed_model_id:", response.deployed_model_id)
 
     if not hasattr(response, "predictions"):
-        raise ValueError("Resposta inválida do endpoint: nenhuma predição encontrada")
+        raise ValueError("Nenhuma predição encontrada no endpoint.")
 
     # Processar os resultados
     predictions = response.predictions
     results = []
     for prediction in predictions:
         pred_dict = dict(prediction)
-        print(" prediction:", pred_dict)
         results.append(pred_dict)
 
     return results
 
-
 def classify_image(image):
-    # Salva a imagem temporariamente
     temp_path = "/tmp/uploaded_image.jpg"
     image.save(temp_path)
-    
+
     try:
-        # Chamar a predição
+        # Fazer a predição
         results = predict_image_classification_sample(filename=temp_path)
         if not results:
-            return "Nenhuma predição encontrada"
-        
-        predictions = []
-        for result in results:
-            if isinstance(result, dict):
-                if 'displayNames' in result and 'confidences' in result:
-                    for name, confidence in zip(result['displayNames'], result['confidences']):
-                        predictions.append(f"{name}: {confidence*100:.2f}%")
-        
+            return "Nenhuma predição encontrada."
+
+        predictions = [
+            f"{res.get('displayNames', [''])[0]}: {res.get('confidences', [0])[0] * 100:.2f}%"
+            for res in results
+        ]
+
         if predictions:
             return "## Resultado\n" + "\n".join(f"## {p}" for p in predictions)
-        return f"## Nenhuma predição válida encontrada\nResultado bruto: {str(results)}"
+        return "## Nenhuma predição válida encontrada."
     except Exception as e:
         return f"Erro ao processar a imagem: {str(e)}"
 
-
 # Interface Gradio
 with gr.Blocks() as interface:
-    # Layout
     gr.Image(value="logo.png", label="", interactive=False, width=300, elem_id="logo", show_label=False)
     gr.Markdown("### Auditor Digital")
 
-    # Upload e Resultados
     with gr.Row():
         with gr.Column():
             clear_btn = gr.Button("Limpar")
@@ -104,9 +92,7 @@ with gr.Blocks() as interface:
         with gr.Column():
             result_output = gr.Markdown(label="## Resultado")
 
-    # Conexões dos Botões
     submit_btn.click(fn=classify_image, inputs=image_input, outputs=result_output)
     clear_btn.click(lambda: [None, ""], outputs=[image_input, result_output])
 
-# Iniciar a Interface
 interface.launch()
