@@ -1,14 +1,17 @@
 import gradio as gr
 import base64
 import os
-from google.cloud import aiplatform
 from google.cloud.aiplatform.gapic.schema import predict
 import json
 import os
-from google.oauth2 import service_account
+from google.auth import default
+from google.cloud import aiplatform
 
-KEY_PATH = os.getenv("GCP_KEY_PATH", "/home/user/.keys/inteligencia-artificial-collos.json")
-credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
+# Obtém credenciais do ambiente padrão
+credentials, project = default()
+
+# Configurar o cliente com as credenciais obtidas
+aiplatform.init(credentials=credentials, project=project)
 
 
 def predict_image_classification_sample(
