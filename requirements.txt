@@ -1,5 +1,5 @@
-gradio==3.50.2
-torch==2.1.2
-transformers==4.36.2
-peft==0.7.1
-accelerate==0.26.1
+gradio
+google-cloud-aiplatform
+google-auth
+google-auth-oauthlib
+Pillow
