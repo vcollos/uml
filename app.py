@@ -22,8 +22,11 @@ def predict_image_classification_sample(
     client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
 
     # Lê e codifica a imagem
-    with open(filename, "rb") as f:
-        file_content = f.read()
+    try:
+        with open(filename, "rb") as f:
+            file_content = f.read()
+    except FileNotFoundError:
+        raise ValueError("Arquivo de imagem não encontrado.")
 
     encoded_content = base64.b64encode(file_content).decode("utf-8")
     instance = predict.instance.ImageClassificationPredictionInstance(
@@ -40,7 +43,10 @@ def predict_image_classification_sample(
     endpoint = client.endpoint_path(project=project, location=location, endpoint=endpoint_id)
 
     # Realizar a predição
-    response = client.predict(endpoint=endpoint, instances=instances, parameters=parameters)
+    try:
+        response = client.predict(endpoint=endpoint, instances=instances, parameters=parameters)
+    except Exception as e:
+        raise ValueError(f"Erro ao chamar o endpoint: {str(e)}")
 
     if not hasattr(response, "predictions"):
         raise ValueError("Nenhuma predição encontrada no endpoint.")
@@ -82,19 +88,17 @@ with gr.Blocks() as interface:
 
     with gr.Row():
         with gr.Column():
-            clear_btn = gr.Button("Limpar")
+            image_input = gr.Image(type="pil", label="Enviar Imagem")
     with gr.Row():
         with gr.Column():
             submit_btn = gr.Button("Auditar")
+            clear_btn = gr.Button("Limpar")
     with gr.Row():
         with gr.Column():
             result_output = gr.Markdown(label="## Resultado")
-    with gr.Row():
-        with gr.Column():
-            image_input = gr.Image(type="pil", label="Enviar Imagem")
-    
 
+    # Configurações dos botões
     submit_btn.click(fn=classify_image, inputs=image_input, outputs=result_output)
-    clear_btn.click(lambda: [None, ""], outputs=[image_input, result_output])
+    clear_btn.click(lambda: [None, "Resultado limpo."], outputs=[image_input, result_output])
 
 interface.launch()
