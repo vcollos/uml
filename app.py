@@ -13,7 +13,7 @@ aiplatform.init(credentials=credentials, project=project)
 def predict_image_classification_sample(
     filename: str,
     project: str = "366594249966",
-    endpoint_id: str = "2478766501448908800",
+    endpoint_id: str = "8233381662809915392",
     location: str = "us-central1",
     api_endpoint: str = "us-central1-aiplatform.googleapis.com",
 ):
