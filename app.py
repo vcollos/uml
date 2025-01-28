@@ -88,10 +88,11 @@ with gr.Blocks() as interface:
             submit_btn = gr.Button("Auditar")
     with gr.Row():
         with gr.Column():
-            image_input = gr.Image(type="pil", label="Enviar Imagem")
+            result_output = gr.Markdown(label="## Resultado")
     with gr.Row():
         with gr.Column():
-            result_output = gr.Markdown(label="## Resultado")
+            image_input = gr.Image(type="pil", label="Enviar Imagem")
+    
 
     submit_btn.click(fn=classify_image, inputs=image_input, outputs=result_output)
     clear_btn.click(lambda: [None, ""], outputs=[image_input, result_output])
